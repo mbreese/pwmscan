@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='pwmscan',
-      version='0.0.1',
+      version='0.0.2-dev',
       description='Scans a DNA sequence against a PWM',
       author='Marcus R. Breese',
       author_email='marcus@breese.com',

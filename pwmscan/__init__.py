@@ -75,6 +75,7 @@ class PWM(object):
 		self.totals = []
 		self._length = 0
 		self._maxscore = 0
+		self._maxscores = []
 		self.consensus = ''
 		self.pseudo = pseudo
 		self.background_freq = background_freq
@@ -108,6 +109,7 @@ class PWM(object):
 				self.matrix_llh[base].append(llh)
 
 			self._maxscore += posmax
+			self._maxscores.append(posmax)
 			self.consensus += IUPAC[''.join(sorted(possible))]
 
 	def _read_counts(self, fname):
@@ -165,16 +167,24 @@ class PWM(object):
 			out.write('%s\n' % '\t'.join(outcols))
 			i += 1
 
-	def score(self, seq):
+	def score(self, seq, thres=0):
 		if len(seq) < self.length:
 			raise ValueError("Length of seq (%s) is less then the PWM length (%s)" % (len(seq), self.length))
 
 		acc = 0.0
 		matches = 0
-		for i, s in enumerate(seq.upper()):
+		maxpossible = self._maxscore
+
+		for i, s in enumerate(seq):
+			if (acc+maxpossible) < thres:
+				return None, None
+
 			acc += self.matrix_llh[s][i]
 			if self.matrix_llh[s][i] > 0:
 				matches += 1
+
+			maxpossible -= self._maxscores[i]
+
 
 		return acc, matches
 
@@ -193,7 +203,7 @@ def fasta_reader(fname, size=50):
 				pos = 0
 				buf = ''
 			else:
-				buf += line
+				buf += line.upper()
 				while len(buf) > size:
 					yield (ref, buf[:size], pos)
 					pos += size
@@ -209,7 +219,6 @@ def pwmscan(fname, pwm, threshold=0):
 
 	print ""
 	print "target\tpos\tlog-likelihood score\tmatches\tquery"
-
 	while True:
 		try:
 			name, seq, pos = reader.next()
@@ -225,10 +234,11 @@ def pwmscan(fname, pwm, threshold=0):
 
 		while len(buf) > pwm.length:
 			score, matches = pwm.score(buf[:pwm.length])
-			if score > threshold:
-				print '\t'.join([str(x) for x in [cur_ref, cur_pos, score, matches, buf[:pwm.length]]])
+
+			if score is not None:
+				if score > threshold:
+					print '\t'.join([str(x) for x in [cur_ref, cur_pos, score, matches, buf[:pwm.length]]])
 
 			buf = buf[1:]
 			cur_pos += 1
-
 

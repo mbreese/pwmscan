@@ -81,6 +81,6 @@ if __name__ == '__main__':
 
     print "Consensus sequence: %s" % pwm.consensus
     print 'Max score: %s' % pwm.maxscore
-    print "Using a score threshold of: %s (50%% max score)" %  (pwm.maxscore / 2)
+    #print "Using a score threshold of: %s (50%% max score)" %  (pwm.maxscore / 2)
 
-    pwmscan.pwmscan(ref_fname, pwm, pwm.maxscore / 2) 
+    pwmscan.pwmscan(ref_fname, pwm) 
